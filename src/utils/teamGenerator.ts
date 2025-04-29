@@ -41,6 +41,13 @@ export const generateBalancedTeams = (players: Player[], playersPerTeam: number 
   const maxFieldPlayersTeamA = playersPerTeam - teamA.length;
   const maxFieldPlayersTeamB = playersPerTeam - teamB.length;
   
+  // Define a função para calcular a média de habilidade
+  const calculateAverageSkill = (players: Player[]): number => {
+    if (players.length === 0) return 0;
+    const sum = players.reduce((acc, player) => acc + player.skillLevel, 0);
+    return parseFloat((sum / players.length).toFixed(1));
+  };
+  
   // Algoritmo de distribuição alternada "snake draft" para jogadores de linha
   // Coloca o melhor jogador disponível no time com menos habilidade total
   let index = 0;
@@ -60,12 +67,6 @@ export const generateBalancedTeams = (players: Player[], playersPerTeam: number 
     
     index++;
   }
-  
-  const calculateAverageSkill = (players: Player[]): number => {
-    if (players.length === 0) return 0;
-    const sum = players.reduce((acc, player) => acc + player.skillLevel, 0);
-    return parseFloat((sum / players.length).toFixed(1));
-  };
   
   return [
     {

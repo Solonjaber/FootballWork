@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Team } from '@/types/models';
 import { useToast } from '@/components/ui/use-toast';
-import { SoccerBall } from 'lucide-react';
+import { Dices } from 'lucide-react';
 
 const GenerateTeamsPage: React.FC = () => {
   const { players } = usePlayerStore();
@@ -94,7 +94,7 @@ const GenerateTeamsPage: React.FC = () => {
           onClick={handleGenerateTeams}
           disabled={!hasEnoughPlayers}
         >
-          <SoccerBall className="mr-2 h-4 w-4" />
+          <Dices className="mr-2 h-4 w-4" />
           Sortear Times
         </Button>
         

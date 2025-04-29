@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Users, SoccerBall, BarChart2 } from 'lucide-react';
+import { Users, Dices, BarChart2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const BottomNav: React.FC = () => {
@@ -10,7 +10,7 @@ const BottomNav: React.FC = () => {
   
   const navItems = [
     { path: '/', label: 'Jogadores', icon: Users },
-    { path: '/gerar-times', label: 'Gerar Times', icon: SoccerBall },
+    { path: '/gerar-times', label: 'Gerar Times', icon: Dices },
     { path: '/historico', label: 'Histórico', icon: BarChart2 },
   ];
   

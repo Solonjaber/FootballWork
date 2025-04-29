@@ -4,22 +4,41 @@ import { usePlayerStore } from '@/store/playerStore';
 import { useMatchStore } from '@/store/matchStore';
 import { generateBalancedTeams } from '@/utils/teamGenerator';
 import TeamDisplay from '@/components/TeamDisplay';
+import FootballField from '@/components/FootballField';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Team } from '@/types/models';
+import { Team, Player } from '@/types/models';
 import { useToast } from '@/components/ui/use-toast';
-import { Dices } from 'lucide-react';
+import { Dices, ShieldAlert, RotateCcw } from 'lucide-react';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose
+} from "@/components/ui/dialog";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger
+} from "@/components/ui/tabs";
 
 const GenerateTeamsPage: React.FC = () => {
-  const { players } = usePlayerStore();
+  const { players, toggleYellowCard, toggleRedCard, resetCards } = usePlayerStore();
   const { setCurrentTeams, saveMatch, currentTeams, clearCurrentTeams } = useMatchStore();
   const { toast } = useToast();
   
   const [playersPerTeam, setPlayersPerTeam] = useState<number>(5);
   const [location, setLocation] = useState<string>('');
   const [notes, setNotes] = useState<string>('');
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [viewMode, setViewMode] = useState<"list" | "field">("list");
   
   const presentPlayers = players.filter(p => p.attendance);
   const totalPlayersNeeded = playersPerTeam * 2;
@@ -53,6 +72,18 @@ const GenerateTeamsPage: React.FC = () => {
     clearCurrentTeams();
     setLocation('');
     setNotes('');
+  };
+
+  const handlePlayerClick = (player: Player) => {
+    setSelectedPlayer(player);
+  };
+
+  const handleResetCards = () => {
+    resetCards();
+    toast({
+      title: "Cartões resetados",
+      description: "Todos os cartões foram removidos."
+    });
   };
   
   return (
@@ -97,6 +128,16 @@ const GenerateTeamsPage: React.FC = () => {
           <Dices className="mr-2 h-4 w-4" />
           Sortear Times
         </Button>
+
+        <div className="flex justify-between mt-4">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleResetCards}
+          >
+            <RotateCcw size={16} className="mr-1" /> Resetar Cartões
+          </Button>
+        </div>
         
         {!hasEnoughPlayers && (
           <p className="text-sm text-destructive mt-2">
@@ -107,11 +148,26 @@ const GenerateTeamsPage: React.FC = () => {
       
       {currentTeams[0] && currentTeams[1] && (
         <div className="animate-bounce-in">
-          <div className="mb-6">
-            <TeamDisplay team={currentTeams[0] as Team} className="team-a" />
-            <div className="text-center my-2">VS</div>
-            <TeamDisplay team={currentTeams[1] as Team} className="team-b" />
-          </div>
+          <Tabs value={viewMode} onValueChange={(value: string) => setViewMode(value as "list" | "field")} className="w-full mb-4">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="list">Lista</TabsTrigger>
+              <TabsTrigger value="field">Campo</TabsTrigger>
+            </TabsList>
+            <TabsContent value="list" className="mt-4">
+              <div className="mb-6">
+                <TeamDisplay team={currentTeams[0] as Team} className="team-a" />
+                <div className="text-center my-2">VS</div>
+                <TeamDisplay team={currentTeams[1] as Team} className="team-b" />
+              </div>
+            </TabsContent>
+            <TabsContent value="field" className="mt-4">
+              <FootballField 
+                teamA={currentTeams[0] as Team} 
+                teamB={currentTeams[1] as Team} 
+                onPlayerClick={handlePlayerClick}
+              />
+            </TabsContent>
+          </Tabs>
           
           <div className="bg-card p-4 rounded-lg shadow-sm space-y-4">
             <h3 className="font-medium">Salvar esta partida</h3>
@@ -142,6 +198,44 @@ const GenerateTeamsPage: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* Dialog para gerenciar cartões */}
+      <Dialog open={!!selectedPlayer} onOpenChange={(open) => !open && setSelectedPlayer(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Gerenciar Jogador</DialogTitle>
+            <DialogDescription>
+              {selectedPlayer ? selectedPlayer.name : ''} - Nível {selectedPlayer?.skillLevel ?? ''}
+              {selectedPlayer?.position && ` - ${selectedPlayer.position}`}
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-2 gap-4 py-4">
+            <Button 
+              variant={selectedPlayer?.yellowCard ? "default" : "outline"}
+              className="flex items-center" 
+              onClick={() => selectedPlayer && toggleYellowCard(selectedPlayer.id)}
+            >
+              <div className="w-4 h-6 bg-yellow-400 mr-2"></div>
+              Cartão Amarelo
+            </Button>
+            <Button 
+              variant={selectedPlayer?.redCard ? "default" : "outline"}
+              className="flex items-center"
+              onClick={() => selectedPlayer && toggleRedCard(selectedPlayer.id)}
+            >
+              <div className="w-4 h-6 bg-red-500 mr-2"></div>
+              Cartão Vermelho
+            </Button>
+          </div>
+          
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Fechar</Button>
+            </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

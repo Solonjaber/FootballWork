@@ -11,25 +11,55 @@ export const generateBalancedTeams = (players: Player[], playersPerTeam: number 
   // Filtra apenas jogadores presentes
   const availablePlayers = [...players].filter(player => player.attendance);
   
+  // Separa goleiros e jogadores de linha
+  const goalkeepers = availablePlayers.filter(player => player.position?.toLowerCase() === 'goleiro');
+  const fieldPlayers = availablePlayers.filter(player => player.position?.toLowerCase() !== 'goleiro');
+  
   // Ordena por nível de habilidade (decrescente)
-  availablePlayers.sort((a, b) => b.skillLevel - a.skillLevel);
+  goalkeepers.sort((a, b) => b.skillLevel - a.skillLevel);
+  fieldPlayers.sort((a, b) => b.skillLevel - a.skillLevel);
   
-  // Limita ao número máximo de jogadores necessários
-  const neededPlayers = availablePlayers.slice(0, playersPerTeam * 2);
-  
+  // Inicia times vazios
   const teamA: Player[] = [];
   const teamB: Player[] = [];
   
-  // Algoritmo de distribuição alternada "snake draft"
-  // Coloca o melhor jogador no time A, o segundo melhor no time B,
-  // o terceiro melhor no time B, o quarto melhor no time A, e assim por diante.
-  neededPlayers.forEach((player, index) => {
-    if (index % 4 === 0 || index % 4 === 3) {
+  // Distribui goleiros (um para cada time, se disponível)
+  if (goalkeepers.length >= 2) {
+    teamA.push(goalkeepers[0]);
+    teamB.push(goalkeepers[1]);
+    
+    // Se houver mais goleiros, adiciona-os aos jogadores de linha
+    if (goalkeepers.length > 2) {
+      fieldPlayers.push(...goalkeepers.slice(2));
+    }
+  } else if (goalkeepers.length === 1) {
+    // Se só há um goleiro, coloca no time A
+    teamA.push(goalkeepers[0]);
+  }
+  
+  // Limita ao número máximo de jogadores necessários por time
+  const maxFieldPlayersTeamA = playersPerTeam - teamA.length;
+  const maxFieldPlayersTeamB = playersPerTeam - teamB.length;
+  
+  // Algoritmo de distribuição alternada "snake draft" para jogadores de linha
+  // Coloca o melhor jogador disponível no time com menos habilidade total
+  let index = 0;
+  while ((teamA.length < playersPerTeam || teamB.length < playersPerTeam) && index < fieldPlayers.length) {
+    const player = fieldPlayers[index];
+    
+    // Calcula a média de habilidade atual de cada time
+    const teamAAverage = calculateAverageSkill(teamA);
+    const teamBAverage = calculateAverageSkill(teamB);
+    
+    if (teamA.length < maxFieldPlayersTeamA && 
+        (teamB.length >= maxFieldPlayersTeamB || teamAAverage <= teamBAverage)) {
       teamA.push(player);
-    } else {
+    } else if (teamB.length < maxFieldPlayersTeamB) {
       teamB.push(player);
     }
-  });
+    
+    index++;
+  }
   
   const calculateAverageSkill = (players: Player[]): number => {
     if (players.length === 0) return 0;

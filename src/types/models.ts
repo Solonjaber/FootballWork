@@ -6,6 +6,8 @@ export interface Player {
   attendance: boolean;
   position?: string;
   avatar?: string;
+  yellowCard?: boolean;
+  redCard?: boolean;
 }
 
 export interface Team {

@@ -10,6 +10,9 @@ interface PlayerStore {
   updatePlayer: (player: Player) => void;
   toggleAttendance: (id: string) => void;
   updateSkillLevel: (id: string, skillLevel: number) => void;
+  toggleYellowCard: (id: string) => void;
+  toggleRedCard: (id: string) => void;
+  resetCards: () => void;
 }
 
 export const usePlayerStore = create<PlayerStore>()(
@@ -21,7 +24,9 @@ export const usePlayerStore = create<PlayerStore>()(
         const newPlayer: Player = {
           ...playerData,
           id: `player-${Date.now()}`,
-          attendance: true // Por padrão, quando adicionado, o jogador está presente
+          attendance: true, // Por padrão, quando adicionado, o jogador está presente
+          yellowCard: false,
+          redCard: false
         };
         return { players: [...state.players, newPlayer] };
       }),
@@ -50,6 +55,30 @@ export const usePlayerStore = create<PlayerStore>()(
             ? { ...player, skillLevel } 
             : player
         )
+      })),
+
+      toggleYellowCard: (id) => set((state) => ({
+        players: state.players.map(player => 
+          player.id === id 
+            ? { ...player, yellowCard: !player.yellowCard } 
+            : player
+        )
+      })),
+
+      toggleRedCard: (id) => set((state) => ({
+        players: state.players.map(player => 
+          player.id === id 
+            ? { ...player, redCard: !player.redCard } 
+            : player
+        )
+      })),
+
+      resetCards: () => set((state) => ({
+        players: state.players.map(player => ({ 
+          ...player, 
+          yellowCard: false, 
+          redCard: false 
+        }))
       })),
     }),
     {

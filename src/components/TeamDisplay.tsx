@@ -22,7 +22,15 @@ const TeamDisplay: React.FC<TeamDisplayProps> = ({ team, className }) => {
         {team.players.map((player) => (
           <div key={player.id} className="bg-white/10 p-2 rounded flex justify-between items-center">
             <div>
-              <p className="font-medium">{player.name}</p>
+              <div className="flex items-center">
+                <p className="font-medium">{player.name}</p>
+                {player.yellowCard && (
+                  <span className="ml-2 w-3 h-4 bg-yellow-400 rounded-sm inline-block"></span>
+                )}
+                {player.redCard && (
+                  <span className="ml-1 w-3 h-4 bg-red-500 rounded-sm inline-block"></span>
+                )}
+              </div>
               {player.position && (
                 <p className="text-xs opacity-80">{player.position}</p>
               )}

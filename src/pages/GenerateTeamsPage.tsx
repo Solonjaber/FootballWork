@@ -40,7 +40,7 @@ const GenerateTeamsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "field">("list");
   const [addPlayerDialogOpen, setAddPlayerDialogOpen] = useState<boolean>(false);
   const [newPlayerName, setNewPlayerName] = useState<string>('');
-  const [newPlayerPosition, setNewPlayerPosition] = useState<string>('');
+  const [newPlayerPosition, setNewPlayerPosition] = useState<string>('none'); // Mudamos o valor padrão para "none" em vez de string vazia
   const [newPlayerSkill, setNewPlayerSkill] = useState<string>('5');
   
   const presentPlayers = players.filter(p => p.attendance);
@@ -141,13 +141,13 @@ const GenerateTeamsPage: React.FC = () => {
       name: newPlayerName,
       skillLevel: parseInt(newPlayerSkill),
       attendance: true,
-      position: newPlayerPosition || undefined,
+      position: newPlayerPosition === 'none' ? undefined : newPlayerPosition, // Convertemos 'none' para undefined
       yellowCard: false,
       redCard: false
     });
 
     setNewPlayerName('');
-    setNewPlayerPosition('');
+    setNewPlayerPosition('none'); // Definimos para 'none' em vez de string vazia
     setNewPlayerSkill('5');
     setAddPlayerDialogOpen(false);
 
@@ -364,7 +364,8 @@ const GenerateTeamsPage: React.FC = () => {
                   <SelectValue placeholder="Selecione uma posição" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Sem posição</SelectItem>
+                  {/* Aqui está a correção - usar 'none' em vez de string vazia */}
+                  <SelectItem value="none">Sem posição</SelectItem>
                   <SelectItem value="Goleiro">Goleiro</SelectItem>
                   <SelectItem value="Defesa">Defesa</SelectItem>
                   <SelectItem value="Meio">Meio</SelectItem>

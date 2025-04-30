@@ -41,7 +41,7 @@ const GenerateTeamsPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<"list" | "field">("list");
   const [addPlayerDialogOpen, setAddPlayerDialogOpen] = useState<boolean>(false);
   const [newPlayerName, setNewPlayerName] = useState<string>('');
-  const [newPlayerPosition, setNewPlayerPosition] = useState<string>('none'); // Mudamos o valor padrão para "none" em vez de string vazia
+  const [newPlayerPosition, setNewPlayerPosition] = useState<string>('none');
   const [newPlayerSkill, setNewPlayerSkill] = useState<string>('5');
   
   const presentPlayers = players.filter(p => p.attendance);
@@ -78,10 +78,13 @@ const GenerateTeamsPage: React.FC = () => {
     setNotes('');
   };
 
+// Certifique-se de que handlePlayerClick está definido corretamente:
+
   const handlePlayerClick = (player: Player) => {
-    console.log("Player clicked:", player.name);
+    console.log("Player clicked in GenerateTeamsPage:", player.name, player.id);
     setSelectedPlayer(player);
   };
+
 
   const handleResetCards = () => {
     resetCards();
@@ -98,19 +101,47 @@ const GenerateTeamsPage: React.FC = () => {
     });
   };
 
-  const handleYellowCard = () => {
-    if (selectedPlayer) {
-      toggleYellowCard(selectedPlayer.id);
-      setSelectedPlayer(null);
-    }
-  };
+// Modifique as funções handleYellowCard e handleRedCard:
 
-  const handleRedCard = () => {
-    if (selectedPlayer) {
-      toggleRedCard(selectedPlayer.id);
-      setSelectedPlayer(null);
+const handleYellowCard = () => {
+  if (selectedPlayer) {
+    console.log("Toggling yellow card for player:", selectedPlayer.name);
+    toggleYellowCard(selectedPlayer.id);
+    
+    // Atualize os times para refletir a mudança
+    if (currentTeams[0] && currentTeams[1]) {
+      // Espere pela próxima atualização do estado
+      setTimeout(() => {
+        const updatedPlayers = usePlayerStore.getState().players;
+        const [teamA, teamB] = generateBalancedTeams(updatedPlayers, playersPerTeam);
+        setCurrentTeams([teamA, teamB]);
+      }, 0);
     }
-  };
+    
+    // Feche o diálogo após aplicar o cartão
+    setSelectedPlayer(null);
+  }
+};
+
+const handleRedCard = () => {
+  if (selectedPlayer) {
+    console.log("Toggling red card for player:", selectedPlayer.name);
+    toggleRedCard(selectedPlayer.id);
+    
+    // Atualize os times para refletir a mudança
+    if (currentTeams[0] && currentTeams[1]) {
+      // Espere pela próxima atualização do estado
+      setTimeout(() => {
+        const updatedPlayers = usePlayerStore.getState().players;
+        const [teamA, teamB] = generateBalancedTeams(updatedPlayers, playersPerTeam);
+        setCurrentTeams([teamA, teamB]);
+      }, 0);
+    }
+    
+    // Feche o diálogo após aplicar o cartão
+    setSelectedPlayer(null);
+  }
+};
 
   const handleRemovePlayer = () => {
     if (selectedPlayer) {
@@ -143,13 +174,13 @@ const GenerateTeamsPage: React.FC = () => {
       name: newPlayerName,
       skillLevel: parseInt(newPlayerSkill),
       attendance: true,
-      position: newPlayerPosition === 'none' ? undefined : newPlayerPosition, // Convertemos 'none' para undefined
+      position: newPlayerPosition === 'none' ? undefined : newPlayerPosition,
       yellowCard: false,
       redCard: false
     });
 
     setNewPlayerName('');
-    setNewPlayerPosition('none'); // Definimos para 'none' em vez de string vazia
+    setNewPlayerPosition('none');
     setNewPlayerSkill('5');
     setAddPlayerDialogOpen(false);
 
@@ -239,26 +270,32 @@ const GenerateTeamsPage: React.FC = () => {
                 <TeamDisplay team={currentTeams[1] as Team} className="team-b" />
               </div>
             </TabsContent>
-            <TabsContent value="field" className="mt-4">
-              <FootballField 
-                teamA={currentTeams[0] as Team} 
-                teamB={currentTeams[1] as Team} 
-                onPlayerClick={handlePlayerClick}
-                onPlayerMove={handlePlayerMove}
-              />
-              <div className="flex justify-center mt-2">
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleAddPlayer}
-                >
-                  <UserPlus size={16} className="mr-1" /> Adicionar Jogador
-                </Button>
-              </div>
-              <p className="text-center text-xs text-muted-foreground mt-2">
-                Arraste os jogadores para movê-los no campo
-              </p>
-            </TabsContent>
+
+          <TabsContent value="field" className="mt-4">
+            <FootballField 
+              teamA={currentTeams[0] as Team} 
+              teamB={currentTeams[1] as Team} 
+              onPlayerClick={handlePlayerClick}
+              onPlayerMove={handlePlayerMove}
+              key={`field-${players.filter(p => p.yellowCard || p.redCard).length}`}
+            />
+            <div className="flex justify-center mt-2">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={handleAddPlayer}
+              >
+                <UserPlus size={16} className="mr-1" /> Adicionar Jogador
+              </Button>
+            </div>
+            <p className="text-center text-xs text-muted-foreground mt-2">
+              Arraste os jogadores para movê-los no campo
+            </p>
+            <p className="text-center text-xs text-muted-foreground">
+              Clique duas vezes em um jogador para gerenciar cartões
+            </p>
+          </TabsContent>
+
           </Tabs>
           
           <div className="bg-card p-4 rounded-lg shadow-sm space-y-4">
@@ -291,8 +328,13 @@ const GenerateTeamsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Dialog para gerenciar cartões e remover jogador */}
-      <Dialog open={!!selectedPlayer} onOpenChange={(open) => !open && setSelectedPlayer(null)}>
+      <Dialog 
+        open={!!selectedPlayer} 
+        onOpenChange={(open) => {
+          console.log("Dialog onOpenChange:", open);
+          if (!open) setSelectedPlayer(null);
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Gerenciar Jogador</DialogTitle>

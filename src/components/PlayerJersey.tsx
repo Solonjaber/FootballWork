@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Player } from '@/types/models';
 import { Card } from '@/components/ui/card';
@@ -17,11 +16,9 @@ interface PlayerJerseyProps {
 const PlayerJersey: React.FC<PlayerJerseyProps> = ({ player, name, teamColor, onClick, selected, draggable }) => {
   const [isDragging, setIsDragging] = useState(false);
   
-  // Tempo para distinguir clique de arrasto
+  // Não vamos mais usar o handleMouseUp para chamar onClick
+  // O onClick será chamado pelo componente pai no evento onDoubleClick
   const handleMouseUp = () => {
-    if (!isDragging && onClick) {
-      onClick();
-    }
     setIsDragging(false);
   };
   

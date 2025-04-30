@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { useMatchStore } from '@/store/matchStore';
 import { format } from 'date-fns';
@@ -12,7 +11,8 @@ import { useNavigate } from 'react-router-dom';
 import { History } from 'lucide-react';
 
 const HistoryPage: React.FC = () => {
-  const { matchHistory, useTeamsFromMatch } = useMatchStore();
+  const matchStore = useMatchStore();
+  const { matchHistory } = matchStore;
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -20,7 +20,8 @@ const HistoryPage: React.FC = () => {
     const match = matchHistory.find(m => m.id === matchId);
     if (!match) return;
     
-    useTeamsFromMatch(match);
+    matchStore.useTeamsFromMatch(match);
+    
     toast({
       title: "Times carregados",
       description: "Os times desta partida foram carregados com sucesso."

@@ -1,10 +1,10 @@
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Team, Player } from '@/types/models';
 import PlayerJersey from '@/components/PlayerJersey';
 import { cn } from '@/lib/utils';
 import { usePlayerStore } from '@/store/playerStore';
-import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 interface FootballFieldProps {
   teamA: Team;
@@ -20,7 +20,10 @@ const FootballField: React.FC<FootballFieldProps> = ({
   onPlayerMove 
 }) => {
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
   const { players, updatePlayer } = usePlayerStore();
+  const fieldRef = useRef<HTMLDivElement>(null);
+  const isMobile = useIsMobile();
 
   // Função para abreviar o nome (pega a primeira palavra e a primeira letra do sobrenome se houver)
   const abbreviateName = (name: string) => {
@@ -48,60 +51,84 @@ const FootballField: React.FC<FootballFieldProps> = ({
   };
 
   const handlePlayerSelect = (player: Player) => {
-    if (selectedPlayer && selectedPlayer.id === player.id) {
-      setSelectedPlayer(null);
-    } else {
-      setSelectedPlayer(player);
-      if (onPlayerClick) onPlayerClick(player);
+    if (!isDragging) {
+      if (selectedPlayer && selectedPlayer.id === player.id) {
+        setSelectedPlayer(null);
+      } else {
+        setSelectedPlayer(player);
+        if (onPlayerClick) onPlayerClick(player);
+      }
     }
   };
 
-  const movePlayer = (direction: 'up' | 'down' | 'left' | 'right') => {
-    if (!selectedPlayer) return;
+  const handleDragStart = (e: React.MouseEvent | React.TouchEvent, player: Player) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedPlayer(player);
+    setIsDragging(true);
+  };
+
+  const handleDragMove = (e: React.MouseEvent | React.TouchEvent) => {
+    if (!isDragging || !selectedPlayer || !fieldRef.current) return;
     
-    // Encontra o jogador atual no estado global
+    const rect = fieldRef.current.getBoundingClientRect();
+    let clientX: number, clientY: number;
+    
+    // Obtém as coordenadas com base no tipo de evento (touch ou mouse)
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    
+    // Calcula a posição relativa em porcentagem
+    const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+    const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+    
+    // Encontra e atualiza o jogador
     const currentPlayer = players.find(p => p.id === selectedPlayer.id);
-    if (!currentPlayer) return;
-    
-    // Cria uma cópia do jogador para modificar
-    const updatedPlayer = {...currentPlayer};
-    
-    // Inicializa a posição do campo se não existir
-    if (!updatedPlayer.fieldPosition) {
-      updatedPlayer.fieldPosition = { x: 50, y: 50 };
+    if (currentPlayer) {
+      const updatedPlayer = {...currentPlayer, fieldPosition: {x, y}};
+      updatePlayer(updatedPlayer);
+      
+      if (onPlayerMove) {
+        onPlayerMove(updatedPlayer, updatedPlayer.fieldPosition);
+      }
     }
-    
-    // Ajusta a posição com base na direção
-    const step = 5; // Tamanho do passo em porcentagem
-    switch (direction) {
-      case 'up':
-        updatedPlayer.fieldPosition.y = Math.max(0, updatedPlayer.fieldPosition.y - step);
-        break;
-      case 'down':
-        updatedPlayer.fieldPosition.y = Math.min(100, updatedPlayer.fieldPosition.y + step);
-        break;
-      case 'left':
-        updatedPlayer.fieldPosition.x = Math.max(0, updatedPlayer.fieldPosition.x - step);
-        break;
-      case 'right':
-        updatedPlayer.fieldPosition.x = Math.min(100, updatedPlayer.fieldPosition.x + step);
-        break;
-    }
-    
-    // Atualiza o jogador
-    updatePlayer(updatedPlayer);
-    setSelectedPlayer(updatedPlayer);
-    
-    if (onPlayerMove) {
-      onPlayerMove(updatedPlayer, updatedPlayer.fieldPosition);
-    }
+  };
+  
+  const handleDragEnd = () => {
+    setIsDragging(false);
+  };
+
+  // Configuração de eventos para lidar com diferentes dispositivos
+  const dragEvents = {
+    onTouchStart: (e: React.TouchEvent, player: Player) => handleDragStart(e, player),
+    onTouchMove: handleDragMove,
+    onTouchEnd: handleDragEnd,
+    onMouseDown: (e: React.MouseEvent, player: Player) => handleDragStart(e, player),
+    onMouseMove: isDragging ? handleDragMove : undefined,
+    onMouseUp: isDragging ? handleDragEnd : undefined,
+    onMouseLeave: isDragging ? handleDragEnd : undefined,
   };
 
   const teamAPositions = getPositions(teamA, true);
   const teamBPositions = getPositions(teamB, false);
 
   return (
-    <div className="w-full aspect-[4/3] bg-gradient-to-b from-green-500 to-green-700 rounded-lg relative overflow-hidden my-6">
+    <div 
+      ref={fieldRef}
+      className="w-full aspect-[4/3] bg-gradient-to-b from-green-500 to-green-700 rounded-lg relative overflow-hidden my-6 touch-none"
+      {...(isDragging ? {
+        onMouseMove: dragEvents.onMouseMove as React.MouseEventHandler,
+        onMouseUp: dragEvents.onMouseUp as React.MouseEventHandler,
+        onMouseLeave: dragEvents.onMouseLeave as React.MouseEventHandler,
+        onTouchMove: dragEvents.onTouchMove as React.TouchEventHandler,
+        onTouchEnd: dragEvents.onTouchEnd as React.TouchEventHandler,
+      } : {})}
+    >
       {/* Linhas do campo */}
       <div className="absolute inset-0 flex flex-col">
         {/* Linha central */}
@@ -141,6 +168,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 left: `${fieldPos.x}%`,
                 transform: 'translate(-50%, -50%)'
               }}
+              onMouseDown={(e) => dragEvents.onMouseDown(e, player)}
+              onTouchStart={(e) => dragEvents.onTouchStart(e, player)}
             >
               <PlayerJersey 
                 player={player} 
@@ -148,6 +177,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 teamColor="primary" 
                 onClick={() => handlePlayerSelect(player)}
                 selected={isSelected}
+                draggable={true}
               />
             </div>
           );
@@ -176,6 +206,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 left: `${fieldPos.x}%`,
                 transform: 'translate(-50%, 50%)'
               }}
+              onMouseDown={(e) => dragEvents.onMouseDown(e, player)}
+              onTouchStart={(e) => dragEvents.onTouchStart(e, player)}
             >
               <PlayerJersey 
                 player={player} 
@@ -183,51 +215,12 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 teamColor="secondary" 
                 onClick={() => handlePlayerSelect(player)}
                 selected={isSelected}
+                draggable={true}
               />
             </div>
           );
         })}
       </div>
-
-      {/* Controles de movimento para jogadores selecionados */}
-      {selectedPlayer && (
-        <div className="absolute top-4 right-4 bg-background/90 p-2 rounded-lg shadow-lg">
-          <div className="grid grid-cols-3 gap-1">
-            <div className="col-start-2">
-              <button 
-                className="p-2 bg-primary/20 rounded-full hover:bg-primary/50 transition-all"
-                onClick={() => movePlayer('up')}
-              >
-                <ArrowUp className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="col-start-1 flex justify-center">
-              <button 
-                className="p-2 bg-primary/20 rounded-full hover:bg-primary/50 transition-all"
-                onClick={() => movePlayer('left')}
-              >
-                <ArrowLeft className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="col-start-3 flex justify-center">
-              <button 
-                className="p-2 bg-primary/20 rounded-full hover:bg-primary/50 transition-all"
-                onClick={() => movePlayer('right')}
-              >
-                <ArrowRight className="w-4 h-4" />
-              </button>
-            </div>
-            <div className="col-start-2">
-              <button 
-                className="p-2 bg-primary/20 rounded-full hover:bg-primary/50 transition-all"
-                onClick={() => movePlayer('down')}
-              >
-                <ArrowDown className="w-4 h-4" />
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

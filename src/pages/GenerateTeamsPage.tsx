@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { useMatchStore } from '@/store/matchStore';
@@ -254,6 +253,9 @@ const GenerateTeamsPage: React.FC = () => {
                   <UserPlus size={16} className="mr-1" /> Adicionar Jogador
                 </Button>
               </div>
+              <p className="text-center text-xs text-muted-foreground mt-2">
+                Arraste os jogadores para movê-los no campo
+              </p>
             </TabsContent>
           </Tabs>
           

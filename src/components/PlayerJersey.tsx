@@ -11,14 +11,16 @@ interface PlayerJerseyProps {
   teamColor: 'primary' | 'secondary';
   onClick?: () => void;
   selected?: boolean;
+  draggable?: boolean;
 }
 
-const PlayerJersey: React.FC<PlayerJerseyProps> = ({ player, name, teamColor, onClick, selected }) => {
+const PlayerJersey: React.FC<PlayerJerseyProps> = ({ player, name, teamColor, onClick, selected, draggable }) => {
   return (
     <div 
       className={cn(
         "relative group cursor-pointer",
-        selected && "ring-2 ring-white ring-offset-2 rounded-md"
+        selected && "ring-2 ring-white ring-offset-2 rounded-md",
+        draggable && "cursor-grab active:cursor-grabbing"
       )}
       onClick={onClick}
     >

@@ -5,10 +5,29 @@ import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import TeamDisplay from '@/components/TeamDisplay';
+import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
+import { History } from 'lucide-react';
 
 const HistoryPage: React.FC = () => {
-  const { matchHistory } = useMatchStore();
+  const { matchHistory, useTeamsFromMatch } = useMatchStore();
+  const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  const handleUseTeams = (matchId: string) => {
+    const match = matchHistory.find(m => m.id === matchId);
+    if (!match) return;
+    
+    useTeamsFromMatch(match);
+    toast({
+      title: "Times carregados",
+      description: "Os times desta partida foram carregados com sucesso."
+    });
+    
+    navigate('/gerar-times');
+  };
   
   if (matchHistory.length === 0) {
     return (
@@ -58,6 +77,14 @@ const HistoryPage: React.FC = () => {
                   <TeamDisplay team={match.teamA} className="team-a" />
                   <TeamDisplay team={match.teamB} className="team-b" />
                 </div>
+
+                <Button 
+                  className="w-full mt-4"
+                  onClick={() => handleUseTeams(match.id)}
+                >
+                  <History className="mr-2 h-4 w-4" />
+                  Usar estes times novamente
+                </Button>
               </div>
             </AccordionContent>
           </AccordionItem>

@@ -8,6 +8,7 @@ export interface Player {
   avatar?: string;
   yellowCard?: boolean;
   redCard?: boolean;
+  fieldPosition?: {x: number, y: number}; // Adicionando posição no campo
 }
 
 export interface Team {

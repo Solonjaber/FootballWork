@@ -11,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Team, Player } from '@/types/models';
 import { useToast } from '@/components/ui/use-toast';
-import { Dices, ShieldAlert, RotateCcw } from 'lucide-react';
+import { Dices, ShieldAlert, RotateCcw, UserPlus, UserMinus, X } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -30,7 +30,7 @@ import {
 } from "@/components/ui/tabs";
 
 const GenerateTeamsPage: React.FC = () => {
-  const { players, toggleYellowCard, toggleRedCard, resetCards } = usePlayerStore();
+  const { players, toggleYellowCard, toggleRedCard, resetCards, updatePlayer, removePlayer } = usePlayerStore();
   const { setCurrentTeams, saveMatch, currentTeams, clearCurrentTeams } = useMatchStore();
   const { toast } = useToast();
   
@@ -39,6 +39,10 @@ const GenerateTeamsPage: React.FC = () => {
   const [notes, setNotes] = useState<string>('');
   const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
   const [viewMode, setViewMode] = useState<"list" | "field">("list");
+  const [addPlayerDialogOpen, setAddPlayerDialogOpen] = useState<boolean>(false);
+  const [newPlayerName, setNewPlayerName] = useState<string>('');
+  const [newPlayerPosition, setNewPlayerPosition] = useState<string>('');
+  const [newPlayerSkill, setNewPlayerSkill] = useState<string>('5');
   
   const presentPlayers = players.filter(p => p.attendance);
   const totalPlayersNeeded = playersPerTeam * 2;
@@ -84,6 +88,80 @@ const GenerateTeamsPage: React.FC = () => {
       title: "Cartões resetados",
       description: "Todos os cartões foram removidos."
     });
+  };
+
+  const handlePlayerMove = (player: Player, newPosition: {x: number, y: number}) => {
+    updatePlayer({
+      ...player,
+      fieldPosition: newPosition
+    });
+  };
+
+  const handleYellowCard = () => {
+    if (selectedPlayer) {
+      toggleYellowCard(selectedPlayer.id);
+      setSelectedPlayer(null);
+    }
+  };
+
+  const handleRedCard = () => {
+    if (selectedPlayer) {
+      toggleRedCard(selectedPlayer.id);
+      setSelectedPlayer(null);
+    }
+  };
+
+  const handleRemovePlayer = () => {
+    if (selectedPlayer) {
+      removePlayer(selectedPlayer.id);
+      setSelectedPlayer(null);
+      toast({
+        title: "Jogador removido",
+        description: "O jogador foi removido do time."
+      });
+    }
+  };
+
+  const handleAddPlayer = () => {
+    setAddPlayerDialogOpen(true);
+  };
+
+  const handleSubmitNewPlayer = () => {
+    if (!newPlayerName.trim()) {
+      toast({
+        title: "Nome inválido",
+        description: "Digite um nome para o jogador.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    const { addPlayer } = usePlayerStore.getState();
+    
+    addPlayer({
+      name: newPlayerName,
+      skillLevel: parseInt(newPlayerSkill),
+      attendance: true,
+      position: newPlayerPosition || undefined,
+      yellowCard: false,
+      redCard: false
+    });
+
+    setNewPlayerName('');
+    setNewPlayerPosition('');
+    setNewPlayerSkill('5');
+    setAddPlayerDialogOpen(false);
+
+    toast({
+      title: "Jogador adicionado",
+      description: "O jogador foi adicionado com sucesso."
+    });
+
+    // Recalcular times se já houver times gerados
+    if (currentTeams[0] && currentTeams[1]) {
+      const [teamA, teamB] = generateBalancedTeams(usePlayerStore.getState().players, playersPerTeam);
+      setCurrentTeams([teamA, teamB]);
+    }
   };
   
   return (
@@ -165,7 +243,17 @@ const GenerateTeamsPage: React.FC = () => {
                 teamA={currentTeams[0] as Team} 
                 teamB={currentTeams[1] as Team} 
                 onPlayerClick={handlePlayerClick}
+                onPlayerMove={handlePlayerMove}
               />
+              <div className="flex justify-center mt-2">
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleAddPlayer}
+                >
+                  <UserPlus size={16} className="mr-1" /> Adicionar Jogador
+                </Button>
+              </div>
             </TabsContent>
           </Tabs>
           
@@ -199,7 +287,7 @@ const GenerateTeamsPage: React.FC = () => {
         </div>
       )}
 
-      {/* Dialog para gerenciar cartões */}
+      {/* Dialog para gerenciar cartões e remover jogador */}
       <Dialog open={!!selectedPlayer} onOpenChange={(open) => !open && setSelectedPlayer(null)}>
         <DialogContent>
           <DialogHeader>
@@ -214,7 +302,7 @@ const GenerateTeamsPage: React.FC = () => {
             <Button 
               variant={selectedPlayer?.yellowCard ? "default" : "outline"}
               className="flex items-center" 
-              onClick={() => selectedPlayer && toggleYellowCard(selectedPlayer.id)}
+              onClick={handleYellowCard}
             >
               <div className="w-4 h-6 bg-yellow-400 mr-2"></div>
               Cartão Amarelo
@@ -222,17 +310,91 @@ const GenerateTeamsPage: React.FC = () => {
             <Button 
               variant={selectedPlayer?.redCard ? "default" : "outline"}
               className="flex items-center"
-              onClick={() => selectedPlayer && toggleRedCard(selectedPlayer.id)}
+              onClick={handleRedCard}
             >
               <div className="w-4 h-6 bg-red-500 mr-2"></div>
               Cartão Vermelho
             </Button>
           </div>
           
+          <Button 
+            variant="destructive"
+            className="w-full mt-2" 
+            onClick={handleRemovePlayer}
+          >
+            <UserMinus className="mr-2 h-4 w-4" />
+            Remover Jogador
+          </Button>
+          
           <DialogFooter>
             <DialogClose asChild>
               <Button variant="outline">Fechar</Button>
             </DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog para adicionar novo jogador */}
+      <Dialog open={addPlayerDialogOpen} onOpenChange={setAddPlayerDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Adicionar Jogador</DialogTitle>
+            <DialogDescription>
+              Preencha as informações do novo jogador
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nome do Jogador</Label>
+              <Input
+                id="name"
+                value={newPlayerName}
+                onChange={(e) => setNewPlayerName(e.target.value)}
+                placeholder="Nome do jogador"
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="position">Posição (opcional)</Label>
+              <Select value={newPlayerPosition} onValueChange={setNewPlayerPosition}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione uma posição" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="">Sem posição</SelectItem>
+                  <SelectItem value="Goleiro">Goleiro</SelectItem>
+                  <SelectItem value="Defesa">Defesa</SelectItem>
+                  <SelectItem value="Meio">Meio</SelectItem>
+                  <SelectItem value="Atacante">Atacante</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="skill">Nível (1-10)</Label>
+              <Select value={newPlayerSkill} onValueChange={setNewPlayerSkill}>
+                <SelectTrigger>
+                  <SelectValue placeholder="5" />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map(level => (
+                    <SelectItem key={level} value={level.toString()}>
+                      {level}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddPlayerDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSubmitNewPlayer}>
+              Adicionar
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

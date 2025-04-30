@@ -25,10 +25,10 @@ const TeamDisplay: React.FC<TeamDisplayProps> = ({ team, className }) => {
               <div className="flex items-center">
                 <p className="font-medium">{player.name}</p>
                 {player.yellowCard && (
-                  <span className="ml-2 w-3 h-4 bg-yellow-400 rounded-sm inline-block"></span>
+                  <span className="ml-2 w-3 h-4 bg-yellow-400 rounded-sm inline-block" title="Cartão Amarelo"></span>
                 )}
                 {player.redCard && (
-                  <span className="ml-1 w-3 h-4 bg-red-500 rounded-sm inline-block"></span>
+                  <span className="ml-1 w-3 h-4 bg-red-500 rounded-sm inline-block" title="Cartão Vermelho"></span>
                 )}
               </div>
               {player.position && (

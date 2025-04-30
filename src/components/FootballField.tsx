@@ -1,16 +1,27 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Team, Player } from '@/types/models';
 import PlayerJersey from '@/components/PlayerJersey';
 import { cn } from '@/lib/utils';
+import { usePlayerStore } from '@/store/playerStore';
+import { ArrowUp, ArrowDown, ArrowLeft, ArrowRight } from 'lucide-react';
 
 interface FootballFieldProps {
   teamA: Team;
   teamB: Team;
   onPlayerClick?: (player: Player) => void;
+  onPlayerMove?: (player: Player, newPosition: {x: number, y: number}) => void;
 }
 
-const FootballField: React.FC<FootballFieldProps> = ({ teamA, teamB, onPlayerClick }) => {
+const FootballField: React.FC<FootballFieldProps> = ({ 
+  teamA, 
+  teamB, 
+  onPlayerClick, 
+  onPlayerMove 
+}) => {
+  const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
+  const { players, updatePlayer } = usePlayerStore();
+
   // Função para abreviar o nome (pega a primeira palavra e a primeira letra do sobrenome se houver)
   const abbreviateName = (name: string) => {
     const parts = name.trim().split(' ');
@@ -34,6 +45,56 @@ const FootballField: React.FC<FootballFieldProps> = ({ teamA, teamB, onPlayerCli
     positions.push(...players);
     
     return positions;
+  };
+
+  const handlePlayerSelect = (player: Player) => {
+    if (selectedPlayer && selectedPlayer.id === player.id) {
+      setSelectedPlayer(null);
+    } else {
+      setSelectedPlayer(player);
+      if (onPlayerClick) onPlayerClick(player);
+    }
+  };
+
+  const movePlayer = (direction: 'up' | 'down' | 'left' | 'right') => {
+    if (!selectedPlayer) return;
+    
+    // Encontra o jogador atual no estado global
+    const currentPlayer = players.find(p => p.id === selectedPlayer.id);
+    if (!currentPlayer) return;
+    
+    // Cria uma cópia do jogador para modificar
+    const updatedPlayer = {...currentPlayer};
+    
+    // Inicializa a posição do campo se não existir
+    if (!updatedPlayer.fieldPosition) {
+      updatedPlayer.fieldPosition = { x: 50, y: 50 };
+    }
+    
+    // Ajusta a posição com base na direção
+    const step = 5; // Tamanho do passo em porcentagem
+    switch (direction) {
+      case 'up':
+        updatedPlayer.fieldPosition.y = Math.max(0, updatedPlayer.fieldPosition.y - step);
+        break;
+      case 'down':
+        updatedPlayer.fieldPosition.y = Math.min(100, updatedPlayer.fieldPosition.y + step);
+        break;
+      case 'left':
+        updatedPlayer.fieldPosition.x = Math.max(0, updatedPlayer.fieldPosition.x - step);
+        break;
+      case 'right':
+        updatedPlayer.fieldPosition.x = Math.min(100, updatedPlayer.fieldPosition.x + step);
+        break;
+    }
+    
+    // Atualiza o jogador
+    updatePlayer(updatedPlayer);
+    setSelectedPlayer(updatedPlayer);
+    
+    if (onPlayerMove) {
+      onPlayerMove(updatedPlayer, updatedPlayer.fieldPosition);
+    }
   };
 
   const teamAPositions = getPositions(teamA, true);
@@ -62,24 +123,31 @@ const FootballField: React.FC<FootballFieldProps> = ({ teamA, teamB, onPlayerCli
       <div className="absolute top-4 left-0 w-full h-[calc(50%-4px)] flex flex-wrap justify-evenly items-center px-2">
         {teamAPositions.map((player, idx) => {
           const isGoalkeeper = player.position?.toLowerCase() === 'goleiro';
+          const isSelected = selectedPlayer?.id === player.id;
+          const fieldPos = player.fieldPosition || { 
+            x: isGoalkeeper ? 50 : 10 + Math.floor(idx / 2) * 30, 
+            y: isGoalkeeper ? 5 : 20 + (idx % 2) * 30 
+          };
+
           return (
             <div 
               key={player.id} 
               className={cn(
                 "transition-all duration-200 absolute",
-                isGoalkeeper ? "top-0 left-1/2 -translate-x-1/2" : ""
+                isSelected ? "z-10" : "z-0"
               )}
               style={{
-                top: isGoalkeeper ? '5%' : `${20 + (idx % 2) * 30}%`,
-                left: isGoalkeeper ? '50%' : `${10 + Math.floor(idx / 2) * 30}%`,
-                transform: isGoalkeeper ? 'translateX(-50%)' : 'none'
+                top: `${fieldPos.y}%`,
+                left: `${fieldPos.x}%`,
+                transform: 'translate(-50%, -50%)'
               }}
             >
               <PlayerJersey 
                 player={player} 
                 name={abbreviateName(player.name)} 
                 teamColor="primary" 
-                onClick={() => onPlayerClick && onPlayerClick(player)}
+                onClick={() => handlePlayerSelect(player)}
+                selected={isSelected}
               />
             </div>
           );
@@ -90,29 +158,76 @@ const FootballField: React.FC<FootballFieldProps> = ({ teamA, teamB, onPlayerCli
       <div className="absolute bottom-4 left-0 w-full h-[calc(50%-4px)] flex flex-wrap justify-evenly items-center px-2">
         {teamBPositions.map((player, idx) => {
           const isGoalkeeper = player.position?.toLowerCase() === 'goleiro';
+          const isSelected = selectedPlayer?.id === player.id;
+          const fieldPos = player.fieldPosition || { 
+            x: isGoalkeeper ? 50 : 10 + Math.floor(idx / 2) * 30, 
+            y: isGoalkeeper ? 95 : 80 - (idx % 2) * 30 
+          };
+
           return (
             <div 
               key={player.id} 
               className={cn(
                 "transition-all duration-200 absolute",
-                isGoalkeeper ? "bottom-0 left-1/2 -translate-x-1/2" : ""
+                isSelected ? "z-10" : "z-0"
               )}
               style={{
-                bottom: isGoalkeeper ? '5%' : `${20 + (idx % 2) * 30}%`,
-                left: isGoalkeeper ? '50%' : `${10 + Math.floor(idx / 2) * 30}%`,
-                transform: isGoalkeeper ? 'translateX(-50%)' : 'none'
+                bottom: `${100 - fieldPos.y}%`,
+                left: `${fieldPos.x}%`,
+                transform: 'translate(-50%, 50%)'
               }}
             >
               <PlayerJersey 
                 player={player} 
                 name={abbreviateName(player.name)} 
                 teamColor="secondary" 
-                onClick={() => onPlayerClick && onPlayerClick(player)}
+                onClick={() => handlePlayerSelect(player)}
+                selected={isSelected}
               />
             </div>
           );
         })}
       </div>
+
+      {/* Controles de movimento para jogadores selecionados */}
+      {selectedPlayer && (
+        <div className="absolute top-4 right-4 bg-background/90 p-2 rounded-lg shadow-lg">
+          <div className="grid grid-cols-3 gap-1">
+            <div className="col-start-2">
+              <button 
+                className="p-2 bg-primary/20 rounded-full hover:bg-primary/50 transition-all"
+                onClick={() => movePlayer('up')}
+              >
+                <ArrowUp className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="col-start-1 flex justify-center">
+              <button 
+                className="p-2 bg-primary/20 rounded-full hover:bg-primary/50 transition-all"
+                onClick={() => movePlayer('left')}
+              >
+                <ArrowLeft className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="col-start-3 flex justify-center">
+              <button 
+                className="p-2 bg-primary/20 rounded-full hover:bg-primary/50 transition-all"
+                onClick={() => movePlayer('right')}
+              >
+                <ArrowRight className="w-4 h-4" />
+              </button>
+            </div>
+            <div className="col-start-2">
+              <button 
+                className="p-2 bg-primary/20 rounded-full hover:bg-primary/50 transition-all"
+                onClick={() => movePlayer('down')}
+              >
+                <ArrowDown className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

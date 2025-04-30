@@ -9,6 +9,7 @@ interface MatchStore {
   setCurrentTeams: (teams: [Team, Team]) => void;
   saveMatch: (location?: string, notes?: string) => void;
   clearCurrentTeams: () => void;
+  useTeamsFromMatch: (match: Match) => void;
 }
 
 export const useMatchStore = create<MatchStore>()(
@@ -37,6 +38,10 @@ export const useMatchStore = create<MatchStore>()(
       }),
       
       clearCurrentTeams: () => set({ currentTeams: [null, null] }),
+
+      useTeamsFromMatch: (match: Match) => set({ 
+        currentTeams: [match.teamA, match.teamB] 
+      }),
     }),
     {
       name: 'craque-sorteio-matches',

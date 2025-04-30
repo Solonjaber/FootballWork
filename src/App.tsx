@@ -12,7 +12,7 @@ import Layout from "./components/Layout";
 import NotFound from "./pages/NotFound";
 
 const App: React.FC = () => {
-  // Create a client
+
   const queryClient = new QueryClient();
 
   return (

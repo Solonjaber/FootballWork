@@ -78,8 +78,6 @@ const GenerateTeamsPage: React.FC = () => {
     setNotes('');
   };
 
-// Certifique-se de que handlePlayerClick está definido corretamente:
-
   const handlePlayerClick = (player: Player) => {
     console.log("Player clicked in GenerateTeamsPage:", player.name, player.id);
     setSelectedPlayer(player);
@@ -101,16 +99,12 @@ const GenerateTeamsPage: React.FC = () => {
     });
   };
 
-// Modifique as funções handleYellowCard e handleRedCard:
-
 const handleYellowCard = () => {
   if (selectedPlayer) {
     console.log("Toggling yellow card for player:", selectedPlayer.name);
     toggleYellowCard(selectedPlayer.id);
     
-    // Atualize os times para refletir a mudança
     if (currentTeams[0] && currentTeams[1]) {
-      // Espere pela próxima atualização do estado
       setTimeout(() => {
         const updatedPlayers = usePlayerStore.getState().players;
         const [teamA, teamB] = generateBalancedTeams(updatedPlayers, playersPerTeam);
@@ -118,7 +112,6 @@ const handleYellowCard = () => {
       }, 0);
     }
     
-    // Feche o diálogo após aplicar o cartão
     setSelectedPlayer(null);
   }
 };
@@ -128,9 +121,7 @@ const handleRedCard = () => {
     console.log("Toggling red card for player:", selectedPlayer.name);
     toggleRedCard(selectedPlayer.id);
     
-    // Atualize os times para refletir a mudança
     if (currentTeams[0] && currentTeams[1]) {
-      // Espere pela próxima atualização do estado
       setTimeout(() => {
         const updatedPlayers = usePlayerStore.getState().players;
         const [teamA, teamB] = generateBalancedTeams(updatedPlayers, playersPerTeam);
@@ -138,7 +129,6 @@ const handleRedCard = () => {
       }, 0);
     }
     
-    // Feche o diálogo após aplicar o cartão
     setSelectedPlayer(null);
   }
 };
@@ -189,7 +179,6 @@ const handleRedCard = () => {
       description: "O jogador foi adicionado com sucesso."
     });
 
-    // Recalcular times se já houver times gerados
     if (currentTeams[0] && currentTeams[1]) {
       const [teamA, teamB] = generateBalancedTeams(usePlayerStore.getState().players, playersPerTeam);
       setCurrentTeams([teamA, teamB]);
@@ -408,7 +397,6 @@ const handleRedCard = () => {
                   <SelectValue placeholder="Selecione uma posição" />
                 </SelectTrigger>
                 <SelectContent>
-                  {/* Aqui está a correção - usar 'none' em vez de string vazia */}
                   <SelectItem value="none">Sem posição</SelectItem>
                   <SelectItem value="Goleiro">Goleiro</SelectItem>
                   <SelectItem value="Defesa">Defesa</SelectItem>

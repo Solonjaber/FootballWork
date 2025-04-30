@@ -26,26 +26,22 @@ const FootballField: React.FC<FootballFieldProps> = ({
   const lastClickTimeRef = useRef<number>(0);
   const DOUBLE_CLICK_THRESHOLD = 300; // ms
 
-  // Função para abreviar o nome (pega a primeira palavra e a primeira letra do sobrenome se houver)
   const abbreviateName = (name: string) => {
     const parts = name.trim().split(' ');
     if (parts.length === 1) return parts[0].substring(0, 6);
     return `${parts[0].substring(0, 1)}. ${parts[parts.length - 1].substring(0, 5)}`;
   };
 
-  // Função para determinar posições no campo
   const getPositions = (team: Team, isTeamA: boolean): Player[] => {
     const players = [...team.players];
     const positions = [];
     
-    // Encontra o goleiro, se houver
     const goalkeeper = players.find(p => p.position?.toLowerCase() === 'goleiro');
     if (goalkeeper) {
       positions.push(goalkeeper);
       players.splice(players.indexOf(goalkeeper), 1);
     }
     
-    // Distribui os jogadores restantes
     positions.push(...players);
     
     return positions;
@@ -56,7 +52,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
     const timeSinceLastClick = now - lastClickTimeRef.current;
     
     if (timeSinceLastClick < DOUBLE_CLICK_THRESHOLD) {
-      // Duplo clique - abrir diálogo
+
       console.log("Double click detected, opening dialog for player:", player.name);
       if (onPlayerClick) {
         onPlayerClick(player);
@@ -68,7 +64,7 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
 
   const handleDragStart = (e: React.MouseEvent | React.TouchEvent, player: Player) => {
-    // Apenas use preventDefault para eventos de mouse, não para eventos de toque
+
     if ('button' in e) {
       e.preventDefault();
       e.stopPropagation();
@@ -84,7 +80,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
       const rect = fieldRef.current.getBoundingClientRect();
       let clientX: number, clientY: number;
       
-      // Obtém as coordenadas com base no tipo de evento (touch ou mouse)
       if ('touches' in e) {
         clientX = e.touches[0].clientX;
         clientY = e.touches[0].clientY;
@@ -93,11 +88,9 @@ const FootballField: React.FC<FootballFieldProps> = ({
         clientY = e.clientY;
       }
       
-      // Calcula a posição relativa em porcentagem
       const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
       const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
       
-      // Encontra e atualiza o jogador
       const currentPlayer = players.find(p => p.id === selectedPlayer.id);
       if (currentPlayer) {
         const updatedPlayer = {...currentPlayer, fieldPosition: {x, y}};
@@ -113,10 +106,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
       setIsDragging(false);
     }, []);
 
-// Modifique o useEffect que lida com eventos de toque:
-
-// Modifique o useEffect para incluir handleDragMove no array de dependências:
-
 useEffect(() => {
   if (isDragging) {
     const handleMouseMove = (e: MouseEvent) => handleDragMove(e as unknown as React.MouseEvent);
@@ -126,13 +115,11 @@ useEffect(() => {
     const handleMouseUp = () => handleDragEnd();
     const handleTouchEnd = () => handleDragEnd();
 
-    // Adiciona os listeners em todo o documento
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseup', handleMouseUp);
     document.addEventListener('touchmove', handleTouchMove);
     document.addEventListener('touchend', handleTouchEnd);
 
-    // Remove os listeners quando o componente é desmontado ou o arrastar termina
     return () => {
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseup', handleMouseUp);
@@ -140,26 +127,19 @@ useEffect(() => {
       document.removeEventListener('touchend', handleTouchEnd);
     };
   }
-}, [isDragging, selectedPlayer, handleDragMove, handleDragEnd]); // Adicione handleDragMove e handleDragEnd
+}, [isDragging, selectedPlayer, handleDragMove, handleDragEnd]);
 
-
-// Remova ou modifique o useEffect que tenta impedir o comportamento padrão de eventos de toque:
-// Em vez de tentar impedir o comportamento padrão, vamos usar CSS para impedir a rolagem
 
 useEffect(() => {
   if (isDragging) {
-    // Adicione uma classe ao body para impedir a rolagem
     document.body.classList.add('overflow-hidden');
     
     return () => {
-      // Remova a classe quando o arrasto terminar
       document.body.classList.remove('overflow-hidden');
     };
   }
 }, [isDragging]);
 
-
-  // Impedir comportamento padrão de eventos de toque para evitar o scroll durante o arrasto
   useEffect(() => {
     const preventTouchDefault = (e: TouchEvent) => {
       if (isDragging) {
@@ -227,7 +207,6 @@ useEffect(() => {
           onTouchStart={(e) => handleDragStart(e, player)}
           onMouseDown={(e) => handleDragStart(e, player)}
           onClick={() => {
-            // Usamos onClick em vez de onDoubleClick para implementar nossa própria lógica de clique duplo
             handlePlayerInteraction(player);
           }}
         >
@@ -235,7 +214,6 @@ useEffect(() => {
             player={player} 
             name={abbreviateName(player.name)} 
             teamColor="primary" 
-            // Removemos o onClick aqui para evitar conflitos
             selected={isSelected}
             draggable={true}
           />
@@ -271,7 +249,6 @@ useEffect(() => {
             onTouchStart={(e) => handleDragStart(e, player)}
             onMouseDown={(e) => handleDragStart(e, player)}
             onClick={() => {
-              // Usamos onClick em vez de onDoubleClick para implementar nossa própria lógica de clique duplo
               handlePlayerInteraction(player);
             }}
           >
@@ -279,7 +256,6 @@ useEffect(() => {
               player={player} 
               name={abbreviateName(player.name)} 
               teamColor="secondary" 
-              // Removemos o onClick aqui para evitar conflitos
               selected={isSelected}
               draggable={true}
             />

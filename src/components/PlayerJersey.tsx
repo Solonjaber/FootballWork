@@ -16,8 +16,6 @@ interface PlayerJerseyProps {
 const PlayerJersey: React.FC<PlayerJerseyProps> = ({ player, name, teamColor, onClick, selected, draggable }) => {
   const [isDragging, setIsDragging] = useState(false);
   
-  // Não vamos mais usar o handleMouseUp para chamar onClick
-  // O onClick será chamado pelo componente pai no evento onDoubleClick
   const handleMouseUp = () => {
     setIsDragging(false);
   };

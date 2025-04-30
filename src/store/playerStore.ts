@@ -24,7 +24,7 @@ export const usePlayerStore = create<PlayerStore>()(
         const newPlayer: Player = {
           ...playerData,
           id: `player-${Date.now()}`,
-          attendance: true, // Por padrão, quando adicionado, o jogador está presente
+          attendance: true,
           yellowCard: false,
           redCard: false
         };

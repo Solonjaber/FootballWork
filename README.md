@@ -1,73 +1,100 @@
-# Welcome to your Lovable project
+# FootballWork FC - Mobile
 
-## Project info
+## Sobre o Projeto
 
-**URL**: https://lovable.dev/projects/1e3fff85-6ee8-4b60-a3ea-e894a4e54876
+O **FootballWork** FC é um aplicativo para organização de partidas de futebol amador, permitindo o sorteio equilibrado de times, gerenciamento de jogadores e acompanhamento do histórico de partidas.
 
-## How can I edit this code?
+**Funcionalidades**
 
-There are several ways of editing your application.
+**Gerenciamento de Jogadores:** Cadastre jogadores com nome, nível de habilidade e posição.
+**Sorteio de Times:** Gere times equilibrados automaticamente com base no nível de habilidade dos jogadores.
+**Visualização em Campo:** Posicione os jogadores em um campo virtual e mova-os conforme necessário.
+**Cartões:** Atribua cartões amarelos e vermelhos aos jogadores.
+**Histórico de Partidas:** Salve e consulte partidas anteriores.
+**Interface Responsiva:** Funciona em dispositivos móveis e desktop.
 
-**Use Lovable**
+## Tecnologias Utilizadas
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/1e3fff85-6ee8-4b60-a3ea-e894a4e54876) and start prompting.
+React
+TypeScript
+Tailwind CSS
+Capacitor (para compilação nativa)
+date-fns (formatação de datas)
+Lucide React (ícones)
 
-Changes made via Lovable will be committed automatically to this repo.
+## Instalação e Execução
 
-**Use your preferred IDE**
+**Pré-requisitos**
+Node.js (versão 14 ou superior)
+npm ou yarn
+Android Studio (para compilação Android)
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## Instalação
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+**Clone o repositório:**
+git clone https://github.com/Solonjaber/craque-sorteio-mobile.git
+cd craque-sorteio-mobile
 
-Follow these steps:
+**Instale as dependências:**
+npm install
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+**Execução em Desenvolvimento**
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+Para executar o aplicativo em modo de desenvolvimento:
 
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
-```
 
-**Edit a file directly in GitHub**
+**Compilação para Web**
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+Para compilar o aplicativo para web:
 
-**Use GitHub Codespaces**
+npm run build
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+**Compilação para Android**
 
-## What technologies are used for this project?
+1. Instale o Capacitor:
 
-This project is built with:
+npm install @capacitor/cli @capacitor/core
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+2. Adicione a plataforma Android:
 
-## How can I deploy this project?
+npx cap add android
 
-Simply open [Lovable](https://lovable.dev/projects/1e3fff85-6ee8-4b60-a3ea-e894a4e54876) and click on Share -> Publish.
+3. Compile o projeto web:
 
-## Can I connect a custom domain to my Lovable project?
+npm run build
 
-Yes, you can!
+4. Sincronize os arquivos com a plataforma Android:
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+npx cap sync
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/tips-tricks/custom-domain#step-by-step-guide)
+5. Abra o projeto no Android Studio:
+
+npx cap open android
+
+No Android Studio, você pode executar o aplicativo em um emulador ou gerar um APK para instalação.
+Estrutura do Projeto
+/src/components: Componentes reutilizáveis da interface
+/src/pages: Páginas principais do aplicativo
+/src/store: Gerenciamento de estado (jogadores e partidas)
+/src/types: Definições de tipos TypeScript
+/src/utils: Funções utilitárias, incluindo o algoritmo de sorteio de times
+/src/hooks: Hooks personalizados
+
+**Como Usar**
+
+Cadastro de Jogadores: Na tela inicial, adicione os jogadores que participarão da partida.
+Geração de Times: Na tela "Gerar Times", selecione o número de jogadores por time e clique em "Sortear Times".
+Visualização em Campo: Alterne para a visualização de campo para posicionar os jogadores.
+Gerenciamento de Cartões: Clique duas vezes em um jogador no campo para atribuir cartões.
+Salvar Partida: Após gerar os times, você pode salvar a partida no histórico.
+Consultar Histórico: Na tela "Histórico", você pode ver partidas anteriores e reutilizar times.
+
+**Contribuição**
+Contribuições são bem-vindas! Sinta-se à vontade para abrir issues ou enviar pull requests com melhorias.
+
+**Licença**
+
+Este projeto está licenciado sob a licença MIT.
+
+### Desenvolvido por Solonjaber

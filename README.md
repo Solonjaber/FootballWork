@@ -32,7 +32,7 @@ Android Studio (para compilação Android)
 ## Instalação
 
 **Clone o repositório:**
-git clone https://github.com/Solonjaber/craque-sorteio-mobile.git
+git clone https://github.com/Solonjaber/FootballWork.git
 cd craque-sorteio-mobile
 
 **Instale as dependências:**

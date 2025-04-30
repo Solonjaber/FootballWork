@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Player } from '@/types/models';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -15,14 +15,25 @@ interface PlayerJerseyProps {
 }
 
 const PlayerJersey: React.FC<PlayerJerseyProps> = ({ player, name, teamColor, onClick, selected, draggable }) => {
+  const [isDragging, setIsDragging] = useState(false);
+  
+  // Tempo para distinguir clique de arrasto
+  const handleMouseUp = () => {
+    if (!isDragging && onClick) {
+      onClick();
+    }
+    setIsDragging(false);
+  };
+  
   return (
     <div 
       className={cn(
-        "relative group cursor-pointer",
+        "relative group",
         selected && "ring-2 ring-white ring-offset-2 rounded-md",
         draggable && "cursor-grab active:cursor-grabbing"
       )}
-      onClick={onClick}
+      onMouseUp={handleMouseUp}
+      onTouchEnd={handleMouseUp}
     >
       <div className={cn(
         "w-12 h-14 flex flex-col items-center justify-center rounded-md transform transition-all duration-200 text-white text-xs font-bold shadow-md group-hover:scale-110",

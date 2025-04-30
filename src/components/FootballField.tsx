@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Team, Player } from '@/types/models';
 import PlayerJersey from '@/components/PlayerJersey';
 import { cn } from '@/lib/utils';
@@ -52,12 +52,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
 
   const handlePlayerSelect = (player: Player) => {
     if (!isDragging) {
-      if (selectedPlayer && selectedPlayer.id === player.id) {
-        setSelectedPlayer(null);
-      } else {
-        setSelectedPlayer(player);
-        if (onPlayerClick) onPlayerClick(player);
-      }
+      setSelectedPlayer(player);
+      if (onPlayerClick) onPlayerClick(player);
     }
   };
 
@@ -103,16 +99,44 @@ const FootballField: React.FC<FootballFieldProps> = ({
     setIsDragging(false);
   };
 
-  // Configuração de eventos para lidar com diferentes dispositivos
-  const dragEvents = {
-    onTouchStart: (e: React.TouchEvent, player: Player) => handleDragStart(e, player),
-    onTouchMove: handleDragMove,
-    onTouchEnd: handleDragEnd,
-    onMouseDown: (e: React.MouseEvent, player: Player) => handleDragStart(e, player),
-    onMouseMove: isDragging ? handleDragMove : undefined,
-    onMouseUp: isDragging ? handleDragEnd : undefined,
-    onMouseLeave: isDragging ? handleDragEnd : undefined,
-  };
+  // Manipulador de eventos para todo o documento
+  useEffect(() => {
+    if (isDragging) {
+      const handleMouseMove = (e: MouseEvent) => handleDragMove(e as unknown as React.MouseEvent);
+      const handleTouchMove = (e: TouchEvent) => handleDragMove(e as unknown as React.TouchEvent);
+      const handleMouseUp = () => handleDragEnd();
+      const handleTouchEnd = () => handleDragEnd();
+
+      // Adiciona os listeners em todo o documento
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+      document.addEventListener('touchmove', handleTouchMove, { passive: false });
+      document.addEventListener('touchend', handleTouchEnd);
+
+      // Remove os listeners quando o componente é desmontado ou o arrastar termina
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+        document.removeEventListener('touchmove', handleTouchMove);
+        document.removeEventListener('touchend', handleTouchEnd);
+      };
+    }
+  }, [isDragging, selectedPlayer]);
+
+  // Impedir comportamento padrão de eventos de toque para evitar o scroll durante o arrasto
+  useEffect(() => {
+    const preventTouchDefault = (e: TouchEvent) => {
+      if (isDragging) {
+        e.preventDefault();
+      }
+    };
+    
+    document.addEventListener('touchmove', preventTouchDefault, { passive: false });
+    
+    return () => {
+      document.removeEventListener('touchmove', preventTouchDefault);
+    };
+  }, [isDragging]);
 
   const teamAPositions = getPositions(teamA, true);
   const teamBPositions = getPositions(teamB, false);
@@ -121,13 +145,6 @@ const FootballField: React.FC<FootballFieldProps> = ({
     <div 
       ref={fieldRef}
       className="w-full aspect-[4/3] bg-gradient-to-b from-green-500 to-green-700 rounded-lg relative overflow-hidden my-6 touch-none"
-      {...(isDragging ? {
-        onMouseMove: dragEvents.onMouseMove as React.MouseEventHandler,
-        onMouseUp: dragEvents.onMouseUp as React.MouseEventHandler,
-        onMouseLeave: dragEvents.onMouseLeave as React.MouseEventHandler,
-        onTouchMove: dragEvents.onTouchMove as React.TouchEventHandler,
-        onTouchEnd: dragEvents.onTouchEnd as React.TouchEventHandler,
-      } : {})}
     >
       {/* Linhas do campo */}
       <div className="absolute inset-0 flex flex-col">
@@ -168,8 +185,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 left: `${fieldPos.x}%`,
                 transform: 'translate(-50%, -50%)'
               }}
-              onMouseDown={(e) => dragEvents.onMouseDown(e, player)}
-              onTouchStart={(e) => dragEvents.onTouchStart(e, player)}
+              onTouchStart={(e) => handleDragStart(e, player)}
+              onMouseDown={(e) => handleDragStart(e, player)}
             >
               <PlayerJersey 
                 player={player} 
@@ -206,8 +223,8 @@ const FootballField: React.FC<FootballFieldProps> = ({
                 left: `${fieldPos.x}%`,
                 transform: 'translate(-50%, 50%)'
               }}
-              onMouseDown={(e) => dragEvents.onMouseDown(e, player)}
-              onTouchStart={(e) => dragEvents.onTouchStart(e, player)}
+              onTouchStart={(e) => handleDragStart(e, player)}
+              onMouseDown={(e) => handleDragStart(e, player)}
             >
               <PlayerJersey 
                 player={player} 

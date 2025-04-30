@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { usePlayerStore } from '@/store/playerStore';
 import { useMatchStore } from '@/store/matchStore';
@@ -10,7 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Team, Player } from '@/types/models';
 import { useToast } from '@/components/ui/use-toast';
-import { Dices, ShieldAlert, RotateCcw, UserPlus, UserMinus, X } from 'lucide-react';
+import { Dices, ShieldAlert, RotateCcw, UserPlus, UserMinus, X, Check } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -78,6 +79,7 @@ const GenerateTeamsPage: React.FC = () => {
   };
 
   const handlePlayerClick = (player: Player) => {
+    console.log("Player clicked:", player.name);
     setSelectedPlayer(player);
   };
 
